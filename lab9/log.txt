@@ -1,0 +1,47 @@
+ssh-keygen to generate random key
+press enter and enter passcode
+
+ssh-key -l to show the public key
+press enter to use default file location
+2048 3e:61:8c:ed:55:b7:18:5a:ea:ee:d7:ca:39:93:7b:77 
+/u/cs/ugrad/brennans/.ssh/id_rsa.pub (RSA)
+
+cd into .ssh directory created by keygen
+
+ssh-copy-id brennans@lnxsrv.seas.ucla.edu
+press yes to connect
+messages says this server has been added to list of known hosts permanently
+enter password to continue
+
+eval $(ssh-agent)
+Agent pid 7149
+
+ssh-add
+press enter to use default file location
+
+ssh -X brennans@lnxsrv.seas.ucla.edu and enter password
+-X specifies X forwarding to allow GUI interaction on the local machine
+
+run xeyes
+shows googly eyes in a small window on local machine
+
+from any of the servers I can now simply run ssh lnxsrv07 to change to
+server number 7 for instance or ssh lnxsrv09 to hop to server 8.
+both times required me to enter a password.
+
+to daisy chain ssh connections together, for instance to go through server
+number 7 to get to server number 8, we can use the command
+ssh -A -t brennans@lnxsrv.seas.ucla.edu ssh -A -t lnxsrv07 ssh -A -t lnxsrv08
+I was prompted for the passphrase 3 times in a row.
+
+alternatively we could edit the .ssh/config file and add the lines
+Host brennans
+	HostName brennans@lnxsrv.seas.ucla.edu
+
+Host lnxsrv07
+	ProxyCommand ssh -q brennans nc -q0 lnxsrv07 22
+
+Host lnxsrv08
+	ProxyCommand ssh -q lnxsrv07 nc -q0 %h 22
+
+this would allow us to simply type ssh lnxsrv08 and only require one password

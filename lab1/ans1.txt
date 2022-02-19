@@ -1,0 +1,68 @@
+1. man -K [keyword]
+I used `man man` and searched for `search` using `/search`
+`man man`
+
+2. mv: /usr/local/cs/bin and /bin
+   sh: /bin
+`man which`, `which mv`, `which sh`, `whereis mv`, `whereis sh`
+
+3. ar: used to "create, modify, and extract from archives"
+   pr: "convert text files for printing"
+   tr: "translate, squeeze, and/or delete chars from stdin, writing to stdout"
+`ls /usr/bin/?r`, `man ar`, `man pr`, `man tr
+
+4. /usr/bin/emacs-23.1
+`ls -l /usr/bin/emacs`, `ls -l /etc/alternatives/emacs`,
+`ls -l /usr/bin/emacs-23.1`
+
+5. 4.9.2 for /usr/local/cs/bin/gcc and 4.4.7 for /usr/bin/gcc
+the two programs have different inodes and are therefore unique
+`man gcc`, `which gcc`, `whereisgcc`, `gcc --version`, `/usr/bin/gcc --version`,
+`ls -i /usr/bin/gcc`, `ls -i /usr/local/cs/bin/gcc`,
+
+6. u changes the owner of the file, +sx adds the ability for the specified user
+to "set user or group ID on execution (s)" and execute (x). o-w removes (-) the
+permission to write (w) from "other users not in the file's group (o)".
+`man chmod`
+
+7. total results: 10,666
+first 5 results:
+/usr/local/cs
+/usr/local/cs/.del
+/usr/local/cs/.del/automake-1.14.1
+/usr/local/cs/.del/automake-1.14.1/bin
+/usr/local/cs/.del/automake-1.14.1/share
+
+`man find`, `find /usr/local/cs -mtime +28 -type d`,
+`find /usr/local/cs -mtime +28 -type d | wc -l`
+
+8. 452
+`man find`, `whereis find`, `man wc`, `find /usr/bin/ -type l | wc -l`
+
+9. libusbpp-0.1.so.4.4.4 last modified Jul 6th, 2012
+`man ls`, `man grep`, `ls -latc /usr/lib64 | grep '^-'`
+
+10. locale gets its data from the LC_* environment variables
+`man locale`
+
+11. downcase-dwim, downcase-region, downcase-word
+C-h a and search for `downcase`
+
+12. C-M-r: reverse incremental regexp search
+    C-M-s: incremental regexp search
+    C-M-t: transpose two balanced expressions
+    C-M-u: move up in parenthesis structure
+    C-M-v: scroll the next window
+used C s to do 5 searches for C-M-r through C-M-v
+
+13. C-g cancels any running commands and clears the command buffer, allowing you
+to start over in the middle of a running or partially typed command
+used C s to search for C-g
+
+14. yank copies text from the kill ring and places it in your buffer at the spot
+of your cursor. it can be invoked by C-y
+used C s to search for yank
+
+15. emacs dired returns 414804 results and ls -l returns only 395732
+emacs dired gives . and .. as results, while ls -l does not
+C-x d, `ls -l /usr/bin`

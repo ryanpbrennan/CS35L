@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+
+
+initialviolations=(
+"/[^/]{15,}/"
+"[^-/._A-Za-z]+"
+"^[^/]{15,}/"
+"/[-.]"
+"/[^/]{15,}$"
+"^[-.]+"
+"^[^/]{15,}$"
+)
+
+secondviolations=(
+"/[^/]{15,}/"
+"[^-/._A-Za-z]+"
+"^[^/]{15,}/"
+"/[-.]"
+"/[^/]{15,}$"
+"^[-.]+"
+"^[^/]{15,}$"
+)
+
+initialpattern=$( IFS='|'; echo "${initialviolations[*]}" )
+secondpattern=$( IFS='|'; echo "${secondviolations[*]}" )
+
+set -e
+IFS=$'\n'
+
+
+if [[ $1 == "-r" ]]
+then
+	rFlag=1
+	shift 1
+else
+	rFlag=0
+fi
+
+checkDir ()
+{
+
+if [ $# -eq 0 ]
+then
+	myDir=""
+	#1="."
+	pth=$(pwd)
+	bas=$(basename $pth)
+	length=${#bas}
+elif [[ $1 =~ ^- ]] # || [[ $1 =~ "/-" ]] 
+then                                       
+	1>&2 echo Error: directory cannot begin with -
+	#echo Error: directory cannot begin with -
+	exit 1
+
+elif [ ! -d $1 ] || [ $# -gt 1 ]
+then
+	1>&2 echo ERROR: argument must be a single directory
+	#echo ERROR: argument must be a single directory
+	exit 1
+else
+	myDir=$1
+	bas=$1
+	length=${#myDir}
+fi
+
+
+if [[ $length -gt 14 ]] || [[ ${bas:0:1} == \. ]] || [[ ${bas:0:1} == \- ]]
+then
+	echo $bas
+fi
+
+
+	badfiles=$(find $myDir -maxdepth 1 -mindepth 1 |
+	sed "s/^.\///g" |
+	grep -E "$initialpattern")
+
+	echo "$badfiles"
+
+
+	okfiles=$(find $myDir -maxdepth 1 -mindepth 1 |
+	grep -E "^[-/._A-Za-z]*$" | grep -E "/[^-.]" |
+	grep -E "/[^/]{0,14}/|^[^/]{0,14}/|/[^/]{0,14}$" |
+	sed "s/^.\///g" )
+
+# appends a --- to the end of duplicates so they don't get filtered
+# out by grep later. the assumption is that filenames won't normally
+# end in three dashes. admittendly not the most elegant approach and
+# a potentail bug source
+
+echo "$okfiles" | tr '[:upper:]' '[:lower:]' | sort | uniq -D |
+		sed "s/$/---/g"
+
+}
+
+
+if [[ $rFlag == 1 ]]
+then
+	output=$(find $1 -type d -exec "$0" {} ';' | sed "s/^\.\///g" |
+	grep -E "$secondpattern" | 
+	sed "s/^\.$//g" | sort | uniq)
+	#echo -e $output\n
+	for line in $output
+	do
+		#echo "$line"
+
+		# will test true if it's a duplicate
+		# refer to above "echo okfiles" line in checkdir
+		if [[ "$line" =~ ^.*---$ ]]
+		then
+			
+			if [[ -d $line ]]
+			then
+				echo "$line" | sed "s/---$/\//g" 
+			else
+				echo "$line" | sed "s/---$//g"
+			fi
+		
+		# if its a directory and its basename fails our validation
+		# test, then we print. this is so when one component fails
+		# validation we don't automatically output everything under
+		# it. 		
+		elif [[ $(basename "$line") =~ [^-/._A-Za-z]+|^[^/]{15,}|^[-.]+ ]]
+		then
+			if [[ -d $line ]]
+			then
+				echo "$line/"
+			else
+				echo "$line"
+			fi
+		fi
+	done
+
+else
+	checkDir "$@"
+fi 

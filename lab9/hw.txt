@@ -1,0 +1,22 @@
+1.
+ssh uses end to end encryption so anyone observing the traffic across the
+network would need the associated private keys to be able to decrypt the
+data being transmitted. Yes, it is reasonably secure.
+
+	1.) It would still be secure if our keystrokes had been captured. Even if
+	our passphrase had been captured the key generated could not be 
+	reproduced using the passphrase since the private key is not related to
+	the passphrase.
+
+	2.) Someone being in control of the USB could compromise the security of
+	our data. If the person could steal the private keys they could use them
+	along with the public keys, which are publicly available, to decrypt
+	our communications.
+
+2.
+Since gpg verifies only the equality of the detached signature and the
+file contents someone could reasonably change both of these if you had no
+way to verify whether this was actually the correct public key. One way to
+fix this issue would be to make the public key available on the webpage
+associated with the software so anyone could match them to verify they
+haven't been altered.

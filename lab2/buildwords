@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+#removes closing and opening u tags, and question marks
+cat $1 | sed 's/<\/u>//g' | sed 's/<u>//g' | sed 's/?//g' |
+
+#filters out only lines containing td tags
+grep -o "<td[^>]*>[^<]*</td>.*" |
+
+#removes opening and closing td tags
+sed "s/<td[^>]*>//" | sed "s/<[\/]td>//" |
+
+#translates all uppercase to lowercase
+tr '[:upper:]' '[:lower:]' |
+
+#removes any characters not in the specified set
+awk '!/[^pk\`mnwlhaeiou ]/' |
+
+#replaces every space with a new line
+#essentially breaks up phrases into individual words
+sed "s/[ ]/\n/g" |
+
+#removes blank lines
+sed "/^$/d" |
+
+#substitutes the okina (`) with an apostrophe
+sed "s/\`/\'/g" |
+
+#sorts in alphabetical order, removing duplicates
+sort -u
+
+

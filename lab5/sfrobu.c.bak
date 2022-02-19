@@ -1,0 +1,166 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+int errorCheck(); // 1 if failed, 0 if not
+void memoryCheck(void* memBlock);
+int frobcmp(char const* s1, char const* s2);
+int prefrobcmp(const void* str1, const void* str2);
+
+int main()
+{	
+	struct stat data;
+	char* currentString = malloc(sizeof(char));
+	char** stringList = malloc(sizeof(char*));
+	//int* stringLengths = malloc(sizeof(int));
+	int stringPosition = 0;
+	int listPosition = 0;
+	char* currentChar = malloc(sizeof(char));
+	void* temp;
+	//void* temp2;
+
+	memoryCheck(currentChar);
+	memoryCheck(currentString);
+	memoryCheck(stringList);
+
+	//int res = read(0, currentChar, 1);
+	while (read(0, currentChar, 1))
+	{
+		if (errorCheck())
+		{
+			for (int i = 0; i < listPosition; i++)
+			{
+				free(stringList[listPosition]);
+			}
+			free(stringList);
+			return 1;
+		}
+
+		if (*currentChar != EOF && *currentChar != ' ' &&
+												*currentChar != '\n')
+		{
+			if (stringPosition == 0)
+			{
+				temp = malloc(2*sizeof(char));
+			}
+			else
+			{
+				temp = realloc(currentString,
+								(stringPosition+2)*sizeof(char));
+			}
+
+			memoryCheck(temp);
+			currentString = temp;
+			currentString[stringPosition] = *currentChar;
+			stringPosition++;
+		}
+
+		else /*((*currentChar == ' '|| *currentChar == EOF ||
+		*currentChar == EOT || *currentChar == '\n') && stringPosition > 0)*/
+		{
+			if (*currentChar == EOF)
+				currentString[stringPosition] = ' ';
+			else
+				currentString[stringPosition] = *currentChar;
+
+			stringList[listPosition] = currentString;
+
+			temp = realloc(stringList,(listPosition+2)*sizeof(char*));
+			memoryCheck(temp);
+
+			//temp2 = realloc(stringLengths, (listPosition+1)*sizeof(int));
+			//memoryCheck(temp2);
+
+			//stringLengths = temp2;
+			//stringLengths[listPosition] = stringPosition;
+
+			stringList = temp;
+			stringPosition = 0;
+			listPosition++;
+
+			//temp = malloc(2*sizeof(char));
+			//memoryCheck(temp);
+			//currentString = temp;
+		}
+
+		//if (*currentChar == EOF)
+		//{
+		//	break;
+		//}
+
+	//listPosition++;
+	}
+
+
+	qsort(stringList, listPosition, sizeof(char*), prefrobcmp);
+
+	void* curchar;
+	for (size_t i = 0; i < listPosition; i++)
+	{
+		//printf("%s", stringList[i]);
+		for (size_t j = 0; stringList[i][j] != NULL ; j++)
+		{
+			//printf("%d\n", stringLengths[i]);
+			curchar = &stringList[i][j];
+			write(1, curchar, 1);
+		}
+		//*(char*)curchar = ' ';
+		//write(1, curchar , 1);
+	}
+
+
+	for (size_t i = 0; i < listPosition; i++)
+	{
+		free(stringList[i]);
+	}
+
+	free(stringList);
+
+	return 0;
+}
+
+
+int errorCheck()
+{
+	if (ferror(stdin))
+	{
+		fprintf(stderr, "ERROR: unable to read input");
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+void memoryCheck(void* memBlock)
+{
+	if (memBlock == NULL)
+	{
+		fprintf(stderr, "ERROR: unable to allocate sufficient memory");
+		exit(1);
+	}
+}
+
+int prefrobcmp(const void* str1, const void* str2)
+{
+	const char* string1 = *(const char**)str1;
+	const char* string2 = *(const char**)str2;
+	return frobcmp(string1, string2);
+}
+
+int frobcmp(char const* s1, char const* s2)	
+{	
+	for (;;s1++, s2++)
+	{
+		while (*s1 == '\0') s1++;
+		while (*s2 == '\0') s2++;
+
+		if (*s1 == ' ' && *s2 == ' ') return 0;
+
+		if (*s1 == ' ' || (*s1^42) < (*s2^42)) return -1;
+
+		if (*s2 == ' ' || (*s1^42) > (*s2^42)) return 1;
+	}
+}

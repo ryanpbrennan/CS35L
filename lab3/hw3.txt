@@ -1,0 +1,27 @@
+Q1:
+The patch would marginally improve performance by setting ignore_mode
+regardless of whether it's in the default state or not, negating the need
+the check the conditional statement.
+
+Q2:
+Other coreutils commands may expect the behavior of the pre-patch ls command
+which would increase the likelihood of hard-to-diagnose bugs.
+
+Q3:
+randline.py fails when called on /dev/null because /dev/null will return an
+EOF signal and when random.choice() is called it attempts to get the length
+of that EOF signal, raising an IndexError
+
+Q4:
+when running the script with python3 instead of python2 we get a single 
+syntaxError: invalid syntax as opposed to multiple tracebacks. our version 
+of randline.py uses python3 syntax when raising and handling exceptions.
+the line "except IOError as (errno, strerror)" tips us off to the difference.
+Earlier python versions would not have used the "as" keyword.
+
+Q5:
+I used argparse as opposed to the now deprecated optparse. It seems that it 
+has relatively robust backward compatability with python 2.7 because I did
+not run into any issues testing my shuf.py script extensively with both
+python and python3. 
+python --version output 2.7.9

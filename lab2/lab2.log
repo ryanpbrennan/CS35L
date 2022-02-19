@@ -1,0 +1,56 @@
+Lab 2
+
+used wget to put the assign.html in a local html file
+
+cat assign2 | tr -c 'A-Za-z' '[\n*]' > lab2.txt
+	this strips the complement of the set we defined to be only alphabetic
+	characters, in other words removes anything not alphabetic and replaces
+	it with a new line
+
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' > lab2.txt
+	same as above, except strips repeated newlines to make output compact
+
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort > lab2.txt
+	same as above, but sorted alphabetically
+
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u > lab2.txt
+	output as above, but strips repeated instances of the tr output
+
+cat assign2.html | tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - words > lab2.txt
+	compares the two inputs and outputs 3 columns. our first input is the
+	result of the last tr | sort command. first column is strings
+	that appear in the first input but not in the second, second column
+	is string that appear in the second but not in the first, third column
+	is string that appear in both inputs.
+
+cat assign2.html |tr -cs 'A-Za-z' '[\n*]' | sort -u| comm -23 - words > lab2.txt
+	same as above, except the -23 strips the second and third columns,
+	leaving us with output of only words that appear in the first input,
+	but not the second
+
+used wget to get webpage containing hawaiian and english words to a file 
+called hwords
+
+cat hwords.bak | sed 's/[?"<u>""</u>"]//g'
+	this took all of the intended strings out, but also had the unintended
+	effect of stripping all < and > characters using |'s to seperate the 
+	strings didn't work either.
+
+cat hwords.bak | sed 's/<\/u>//g' | sed 's/<u>//g' | sed 's/?//g' > hwords
+	by seperating the sed commands and piping them together I was able to
+	achieve the desired output. Probably not the most elegant solution.
+
+grep -o "<td[^>]*>[^<]*</td>.*" hwords
+	takes all lines starting with <td and then any number of non-> character,
+	followed by a > and then any number of non-< characters, followed by 
+	</td> and any number of any characters.
+
+sed "s/<td[^>]*>//" hwords | sed "s/<[\/]td>//"
+	removes both the opening and closing td tags, leaving just the words
+
+sed '/^$/d'
+	removes blank lines
+
+## HAWAIIAN CHECKER
+cat assignment2.html | tr -cs '[pk\''mnwlhaeiou]' '[\n*]' |
+	sort -u | comm -23 - hwords

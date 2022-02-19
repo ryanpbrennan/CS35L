@@ -1,0 +1,97 @@
+1. use wget to download the coreutils-with-bug tar file
+
+2. tar xvf coreutils-with-bug to untar package
+
+3. cd into coreutils
+
+4. ./configure && make
+make exits with a "conflicting types" error related to a function called
+futimens. it looks like there is another function called futimens that
+expects different arguments
+
+5. wget the coreutils.diff patch file
+
+6. patch -p0 < coreutils.diff
+
+7. make again
+no errors this time. looking at the diff file it seems like some function
+names were changed to avoid conflicting with previously defined functions.
+specifically futimens was renamed coreutils_futimens and tee was renamed
+coreutils_tee as well as some other small changes.
+
+8.
+$ tmp=$(mktemp -d) && cd $tmp
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice-cs35L
+$ touch now
+$ sleep 1
+$ touch now1
+$ TZ=UTC0 ls -lt --full-time wwi-armistice-cs35L now now1
+output:
+-rw-r--r-- 1 brennans csugrad 0 2020-02-09 08:51:47.057214854 +0000 now1
+-rw-r--r-- 1 brennans csugrad 0 2020-02-09 08:51:41.052002882 +0000 now
+-rw-r--r-- 1 brennans csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistace-cs35L
+
+this seems to be the correct output for the given command
+
+9. I realized I wasn't calling the coreutils-with-bug version of ls. I ran
+the same command again but specified the correct path:
+~/cs35l/lab4/coreutils-with-bug/src/ls -lt
+
+-rw-r--r-- 1 brennans csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistace-cs35L
+-rw-r--r-- 1 brennans csugrad 0 2020-02-09 08:51:47.057214854 +0000 now1
+-rw-r--r-- 1 brennans csugrad 0 2020-02-09 08:51:41.052002882 +0000 now
+which lists the oldest file as the newest.
+
+10. I open ls.c in /src to get some idea as to where to put a breakpoint
+Since I know the issue is with the -t and -l flags, I search for the word
+`time` and come across a comment that describes the variable current_time as
+ /* Current time in seconds and nanoseconds since 1970, updated as
+    needed when deciding whether a file is recent.  */
+which begins to explain one possible source of the bug.
+
+11. being unable to find anything by searching the file, I open up gdb using
+gdb ./src/ls and examine the functions in the symbol tables by typing
+info functions from within gdb. Scanning the list of functions within
+ls.c I see a function called sort_files and have the thought that maybe
+the issue is in the sorting so I set a breakpoint at sort_files
+
+12. run -lt --full-time wwi-armistice-cs35L now now1
+stepping through after the breakpoint I find that we encounter a switch
+based on the variable sort_type. examing its value using p sort_type I find
+it defined as sort_time.
+
+13. stepping through again we encounter another switch statement of the var
+(time_type) which has the value time_mtime. at the next step we see the line
+func = sort_reverse ? rev_cmp_mtime : compare_mtime;
+where sort_reverse is false, causing the value of func to be compare_mtime
+func then gets passed to qsort. it seems I need to examine compare_mtime
+
+14. setting a breakpoint for compare_mtime and stepping through I come across
+timespec_cmp (b=..., a=...) at ../lib/timespec.h:48
+48    int diff = a.tv_sec - b.tv_sec;
+it seems like this subtraction could be causing the value to overflow and
+produce the incorrect output. Knowing what I now know about qsort, I go in 
+to timespec.h and change this line to a conditional that returns 1 if a is 
+greater than b, -1 if a is less than b and 0 otherwise, i.e. they are equal.
+
+15. copy coreutils/lib/timespec.h to coreutils/timespec.h and run
+diff -u /lib/timespec.h timespec.h > ls.diff from within coreutils
+
+16. change timespec.h to lib/timespec.h in ls.diff and add changelog
+
+17. from within coreutils run patch -p0 < ls.diff
+
+18. ./configure && make
+
+19.
+Notably, within a temporary directory the issue is solved and 
+coreutils/src/ls -lt now displays the correct order but within a standard
+directory the mtime of wwi-armistice-cs35L is some time in the future.
+I think this is due to a difference in file systems and signed vs unsigned
+integers but I'm unsure. The bug is fixed by the above modification though,
+at least within the temp directory method outlined in the assignment.
+
+TZ=UTC0 ~/cs35l/lab4/coreutils-with-bug/src/ls -lt --full-time wwi-armistice-cs35L now now1
+-rw-r--r-- 1 brennans csugrad 0 2020-02-10 00:06:38.423127812 +0000 now1
+-rw-r--r-- 1 brennans csugrad 0 2020-02-10 00:06:34.302973567 +0000 now
+-rw-r--r-- 1 brennans csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice-cs35L

@@ -1,0 +1,29 @@
+# scp to copy files downloaded from course website onto seasnet server
+scp Downloads/coreutils-8.29.tar.xz* Downloads/gnu-keyring.gpg 
+brennans@lnxsrv.seas.ucla.edu:cs35l/lab3/
+
+# extracted the tarball using
+tar xf coreutils-8.29.tar.xz
+
+#create temp dir
+mkdir ~/bin
+
+# move into new directory created by tar and configure
+cd coreutils-8.29.tar.xz/ && ./configure --prefix=/u/cs/ugrad/brennans/bin
+
+# make and make install
+make && make install
+
+# reproduce bug, both commands give same output, both equivalent to ls -a
+~/bin/bin/ls -aA and ~/bin/bin/ls -Aa 
+
+# move patch file into coreutils and patch
+patch -p1 < ./0001*
+
+# make coreutils again
+make
+
+# test to make sure bug was patched
+ls -a -A produces the correct output, with no . and ..
+ls -A -a outputs both . and ..
+

@@ -1,0 +1,219 @@
+1.
+after writing both programs and using gcc to compile I used a quick python
+script to generate a 5 million byte file of printable ascii characters
+
+for i in range(0, 5000000):
+	char = chr((i%90)+33)
+	sys.stdout.write(char)
+
+and sent the output to a file called test.txt. I used wc -c test.txt to make
+sure the file was 5 million bytes
+
+2. copying to file: buffered
+strace --summary-only ./tr2b abcd efgh < test.txt > bufferedoutput.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 51.73    0.001646           1      1221           write
+ 24.48    0.000779           0      1238           read
+ 23.79    0.000757           0      1173           mremap
+  0.00    0.000000           0         9           close
+  0.00    0.000000           0         7         7 stat
+  0.00    0.000000           0        11           fstat
+  0.00    0.000000           0         8           lseek
+  0.00    0.000000           0        42           mmap
+  0.00    0.000000           0        11           mprotect
+  0.00    0.000000           0         2           munmap
+  0.00    0.000000           0         6           brk
+  0.00    0.000000           0         2           rt_sigaction
+  0.00    0.000000           0         1           rt_sigprocmask
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         2         1 arch_prctl
+  0.00    0.000000           0         1           set_tid_address
+  0.00    0.000000           0        16         7 openat
+  0.00    0.000000           0         1           set_robust_list
+  0.00    0.000000           0         1           prlimit64
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.003182                  3754        16 total
+
+3. copying to file: unbuffered
+strace --summary-only ./tr2u abcd efgh < test.txt > ubuff.txt
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 61.03  482.913365          99   4871416           munmap
+ 22.92  181.386800          13  13874799           mmap
+ 10.69   84.567130           3  22824678           madvise
+  2.99   23.637061           4   5000042           read
+  2.37   18.771888           3   5000003           write
+  0.00    0.000081           8        10           open
+  0.00    0.000051           2        20           close
+  0.00    0.000035           2        13           mprotect
+  0.00    0.000026          26         1           readlink
+  0.00    0.000024           4         5           rt_sigaction
+  0.00    0.000020           2         9           sched_yield
+  0.00    0.000015          15         1           clone
+  0.00    0.000013           4         3           prlimit64
+  0.00    0.000012           4         3           sigaltstack
+  0.00    0.000012           4         3           clock_gettime
+  0.00    0.000010           1         6           getpid
+  0.00    0.000008           2         3           rt_sigprocmask
+  0.00    0.000007           7         1           wait4
+  0.00    0.000007           3         2           futex
+  0.00    0.000005           2         2           prctl
+  0.00    0.000004           4         1           set_tid_address
+  0.00    0.000003           0        11           fstat
+  0.00    0.000003           3         1           gettid
+  0.00    0.000003           3         1           set_robust_list
+  0.00    0.000000           0         7         7 stat
+  0.00    0.000000           0         8           lseek
+  0.00    0.000000           0         1           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         2         1 arch_prctl
+  0.00    0.000000           0        17         7 openat
+------ ----------- ----------- --------- --------- ----------------
+100.00  791.276583              51571071        16 total
+
+
+4. copying to stdin: buffered
+strace --summary-only ./tr2b abcd efgh < test.txt
+
+time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 87.17    0.014276           2      4883           write
+  7.19    0.001178           0      1229           read
+  5.62    0.000920           0      1156           mremap
+  0.02    0.000004           1         4           fstat
+  0.00    0.000000           0         2           close
+  0.00    0.000000           0         6           lseek
+  0.00    0.000000           0         8           mmap
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         2           munmap
+  0.00    0.000000           0         6           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         2         1 arch_prctl
+  0.00    0.000000           0         2           openat
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.016378                  7306         2 total
+
+5. copying to stdin: unbuffered
+strace --summary-only ./tr2u abcd efgh < test.txt
+
+time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 59.60   22.770694           4   5000000           write
+ 40.38   15.430185           3   5000008           read
+  0.02    0.006434           5      1188           mremap
+  0.00    0.000379         189         2           munmap
+  0.00    0.000023           2         8           mmap
+  0.00    0.000000           0         2           close
+  0.00    0.000000           0         2           fstat
+  0.00    0.000000           0         6           lseek
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         3           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         2         1 arch_prctl
+  0.00    0.000000           0         2           openat
+------ ----------- ----------- --------- --------- ----------------
+100.00   38.207715              10001229         2 total
+
+6.
+
+	time taken for tr2b on a 1 million character file from stdin:
+time cat test | ./tr2b abcd efgh
+real	0m0.088s
+user	0m0.045s
+sys	0m0.008s
+
+	time taken for tr2u on the same file from stdin:
+time cat test | ./tr2u abcd efgh
+real	0m2.704s
+user	0m0.749s
+sys	0m1.965s
+
+buffered tr2 is faster than unbuffered by a factor of about 30.
+
+7. sfrobu on 0 line file "test"
+time cat test | ./sfrobu
+
+real	0m0.006s
+user	0m0.006s
+sys	0m0.003s
+
+8. sfrob on 0 line file "test"
+real	0m0.038s
+user	0m0.028s
+sys	0m0.011s
+
+9. sfrobu on 100 line file "test"
+
+real	0m0.101s
+user	0m0.024s
+sys	0m0.078s
+
+1,282 lines/sec
+
+10. sfrob on 100 line file "test"
+
+real	0m0.135s
+user	0m0.061s
+sys	0m0.048s
+
+2,083 lines/sec
+
+11. sfrobu on 10,000 line file "test"
+
+real	0m8.828s
+user	0m2.998s
+sys	0m5.842s
+
+1,712 lines/sec
+
+12. sfrob on 10,000 line file "test"
+real	7m25.242s
+user	2m29.885s
+sys	4m54.358s
+
+34 lines/sec
+
+13. sfrobu on 1,000,000 line file "test"
+
+real	15m18.595s
+user	5m41.266s
+sys	9m38.499s
+
+1,728 lines/sec
+
+14. sfrob on 1,000,000 line file "test"
+
+This took so long I left it sit for hours and it didn't finish.
+
+15. It's interesting because I can see that the buffered version of tr2
+is much faster then the unbuffered (about 250,000x faster when writing to a
+file, and 3,500x faster when writing to stdin) but the buffered version of
+sfrob is much slower, outpaced by sfrobu by a factor of about 50 on average.
+This could be due to my implementation as I improved some of the efficiency
+the second time around. I think this is the most likely case since tr2u and
+tr2b are very similar in implementation, and sfrob and sfrobu are different
+in some ways that could be meaningful (memory allocation specifically). This
+would explain in part the vast performance differences and why the results
+seem to be the opposite of what my expectations were.
+
+16. Looking at strace's output from sfrobu it appears that the system calls
+responsible for managing memory are mmap and munmap, which correspond to
+malloc/realloc and free respectively. malloc takes five arguments and
+returns a void pointer which points to the location of the allocated memory
+block. The first argument is the desired starting point for your memory
+allocation. If null, or if that block cannot be allocated, the kernel
+makes the decision of where to start allocating from. the second argument is
+an integer representing the length in bytes of memory being requested and
+must be greater than 0. the third argument is an integer that describes the
+memory protection of the mapping. the fourth argument is an integer as well
+and determines whether other processes with memory in the same memory region
+will be updated as to what happens with your mmap call. the fifth argument
+is an integer file descriptor and the sixth is at the offset desired to be
+used with the preceding file descriptor.

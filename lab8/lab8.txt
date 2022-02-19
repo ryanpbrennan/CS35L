@@ -1,0 +1,63 @@
+1. cd into ~eggert/src/gnu/emacs-CS-35L and du which shows 520828 bytes used
+by this directory
+
+du .git shows 358316 with the vast majority of this space taken by
+.git/objects. this is because objects holds all of the previous versions
+of the repository.
+
+2. 
+git branch -a | wc -l shows 353 total branches
+git branch | wc -l shows 176 local branches
+git branch -r | wc -l shows 177 remote branches
+
+3.
+git remote -v shows just one remote repository
+origin  https://git.savannah.gnu.org/git/emacs.git (fetch)
+origin  https://git.savannah.gnu.org/git/emacs.git (push)
+
+4.
+tried to use git branch to accomplish this but ran into a usage error. after
+investing a bit I learned I needed version 2.7.0 of git but running
+git --version showed 1.8.5.3
+I set to finding another method and found git for-each-ref
+I wound up using the command 
+git for-each-ref --count=10 --sort=-committerdate refs/heads/
+--format='%(refname:short)' which output 
+master
+scratch/joaot/make-completion-at-point-function
+feature/windows-with-utils
+scratch/completion-api
+scratch/a-modest-completion-redesign-proposal
+scratch/fido-mode
+feature/gnus-select2
+feature/extend_face_id
+scratch/jit-lock-antiblink-cleaned-up
+emacs-26
+
+5.
+git rev-list --count master shows
+139583
+
+6.
+git rev-list --count --all shows
+143910
+
+139583/143910 = 96.99%
+
+7.
+git shortlog -ns --since=2013-01-01 | head -10 shows
+3691    Eli Zaretskii
+3644    Glenn Morris
+3604    Paul Eggert
+1806    Lars Ingebrigtsen
+1784    Stefan Monnier
+1571    Michael Albinus
+619     Dmitry Gutov
+576     Noam Postavsky
+471     Alan Mackenzie
+469     Juri Linkov
+
+8.
+I used git rev-list --merges --all piped to grep followed by all of the
+hashes seperated by logical ORs and found the only merges were:
+98ac..., abcb..., and 0c06...
